@@ -33,5 +33,12 @@ def get_question(question_sqe):
         ]
     })   
 
+# 질문 개수 확인
+@questions_bp.route('/count', method=['GET'])
+def count_question():
+    total = Question.query.count()
+
+    return jsonify({"total" : total})
+
 if __name__ == '__main__':
     app.run(debug=True)
