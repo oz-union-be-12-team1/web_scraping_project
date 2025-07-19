@@ -32,3 +32,13 @@ def create_user():
         }), 201
     except KeyError as e:
         return jsonify({"error": f"필수 입력이 누락되었습니다: {str(e)}"}), 400
+
+    except ValueError as e:
+        return jsonify({"error": f"입력 값 오류: {str(e)}"}), 400
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "이미 존재하는 이메일입니다."}), 409
+
+    except Exception as e:
+        return jsonify({"error": f"알 수 없는 오류: {str(e)}"}), 500
