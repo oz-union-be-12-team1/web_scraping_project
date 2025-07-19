@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, timezone
-from enum import Enum as PyEnum # 이름변경함 향후 이질문지가 바뀔수 있으므로, sql Enum과 혼동되지 않도록 이름 변경함
+from enum import Enum as PyEnum # 이름변경함 향후 질문지가 바뀔수 있으므로, sql Enum과 혼동되지 않도록 이름 변경함
 
 db = SQLAlchemy()
 
@@ -37,5 +37,14 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=now_kst, onupdate=now_kst)
 
     answers = db.relationship('Answer', backref='user', lazy=True)
+
+class Answer(db.Model):
+    __tablename__ = 'answers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    choice_id = db.Column(db.Integer, db.ForeignKey('choices.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kst)
+    updated_at = db.Column(db.DateTime, default=now_kst, onupdate=now_kst)
 
 
