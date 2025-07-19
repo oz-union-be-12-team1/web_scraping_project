@@ -1,8 +1,6 @@
-from flask import Flask, Blueprint, jsonify, abort, request
+from flask import Flask, Blueprint, jsonify, request
 from config import db
 from app.models import Choices, Question
-
-app = Flask(__name__)
 
 questions_bp = Blueprint('questions', __name__, url_prefix='/quesions')
 
@@ -13,7 +11,7 @@ def get_question(question_sqe):
     question = Question.query.filter_by(sqe = question_sqe).first()
 
     if not question:
-        abort(400, discription="없는 질문 순번입니다.")
+       return jsonify({"message" : "question을 찾을수가 없습니다."}), 404
 
     choices = Choices.query.filter_by(question_id=question.id).all()
 
@@ -39,6 +37,3 @@ def count_question():
     total = Question.query.count()
 
     return jsonify({"total" : total})
-
-if __name__ == '__main__':
-    app.run(debug=True)
