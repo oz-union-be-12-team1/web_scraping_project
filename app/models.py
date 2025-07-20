@@ -1,8 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
+from config import db
 from datetime import datetime, timedelta, timezone
-from enum import Enum as PyEnum # 이름변경함 향후 질문지가 바뀔수 있으므로, sql Enum과 혼동되지 않도록 이름 변경함
-
-db = SQLAlchemy()
+from enum import Enum
 
 KST = timezone(timedelta(hours=9))
 
@@ -11,18 +9,18 @@ def now_kst():
 
 # 정해진 값중 선택을 해야할 경우 사용함 --> 질문지도 고정되면 ENUM 쓰는게 좋을것같은데? --> 관리자에 의해 변경될수 있으므로 안씀
 
-class Age(PyEnum):
+class Age(Enum):
     TEEN = 'teen'
     TWENTY = 'twenty'
     THIRTY = 'thirty'
     FORTY = 'forty'
     FIFTY = 'fifty'
 
-class Gender(PyEnum):
+class Gender(Enum):
     MALE = 'male'
     FEMALE = 'female'
 
-class ImageType(PyEnum):
+class ImageType(Enum):
     MAIN = 'main'
     SUB = 'sub'
 
@@ -47,4 +45,12 @@ class Answer(db.Model):
     created_at = db.Column(db.DateTime, default=now_kst)
     updated_at = db.Column(db.DateTime, default=now_kst, onupdate=now_kst)
 
+class Image(db.Model):
+    __tablename__ = 'images'
+
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(255), nullable=False)
+    type = db.Column(db.Enum(ImageType), nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kst)
+    updated_at = db.Column(db.DateTime, default=now_kst, onupdate=now_kst)
 
