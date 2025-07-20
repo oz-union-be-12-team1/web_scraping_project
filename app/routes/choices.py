@@ -45,7 +45,7 @@ def update_choice(choice_id):
             setattr(update_choice, field, data[field])
 
     update_choice.update_at = datetime.utcnow()
-    update_choice.session.commit()
+    db.session.commit()
 
     return jsonify({
         "id" : update_choice.id,
@@ -55,3 +55,12 @@ def update_choice(choice_id):
         "is_active" : update_choice.is_active
     })
 
+# 선택지 삭제
+@choices_blp.route('/delete/<int:choice_id>', methods=["DELETE"])
+def delete_choice(choice_id):
+    delete_choice = Choices.query.get(choice_id)
+    if not delete_choice:
+        return jsonify({"message" : "해당 질문이 없습니다."}), 404
+    
+    db.session
+    
