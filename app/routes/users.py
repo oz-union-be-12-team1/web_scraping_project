@@ -3,9 +3,13 @@ from app.models import User, Age, Gender
 from config import db
 from sqlalchemy.exc import IntegrityError
 
-users_bp = Blueprint('users', __name__, url_prefix='/users')
+user_blp = Blueprint('users', __name__)
 
-@users_bp.route('/signup', methods=['POST'])
+@user_blp.route("/", methods=["GET"])
+def root_index():
+    return jsonify({"message": "Success Connect"}), 200
+
+@user_blp.route('/signup', methods=['POST'])
 def create_user():
 
     data = request.get_json()
@@ -13,8 +17,8 @@ def create_user():
     try:
         user = User(
             name=data['name'],
-            age=Age(data['age'].upper()),
-            gender=Gender(data['gender'].upper()), 
+            age=Age(data['age'].lower()),
+            gender=Gender(data['gender'].lower()), 
             email=data['email']
         )
         db.session.add(user)
@@ -26,7 +30,7 @@ def create_user():
                 'id': user.id,
                 'name': user.name,
                 'age': user.age.value,
-                'gender': user.gender,
+                'gender': user.gender.value,
                 'email': user.email,
                 'created_at': user.created_at.isoformat()
             }
