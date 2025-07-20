@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.models import User
+from app.models import User, Age, Gender 
 from config import db
 from sqlalchemy.exc import IntegrityError
 
@@ -13,8 +13,8 @@ def create_user():
     try:
         user = User(
             name=data['name'],
-            age=data['age'],
-            gender=data['gender'], 
+            age=Age(data['age'].upper()),
+            gender=Gender(data['gender'].upper()), 
             email=data['email']
         )
         db.session.add(user)
@@ -25,7 +25,7 @@ def create_user():
             'user': {
                 'id': user.id,
                 'name': user.name,
-                'age': user.age,
+                'age': user.age.value,
                 'gender': user.gender,
                 'email': user.email,
                 'created_at': user.created_at.isoformat()
