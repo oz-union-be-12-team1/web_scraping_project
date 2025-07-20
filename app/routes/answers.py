@@ -3,36 +3,32 @@ from config import db
 from app.models import Answer
 from sqlalchemy.exc import SQLAlchemyError
 
-answers_bp = Blueprint('answers', __name__, url_prefix='/answers')
+answers_bp = Blueprint('answers', __name__)
 
-@answers_bp.route('', methods=['POST'])
-def submit_answer():
+@answers_bp.route('/submit', methods=['POST'])
+def submit_answers():
     try:
         data = request.get_json()
 
-        required_fields = ['question_id', 'user_id', 'content']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'{field}는 필수 입력입니다.'}), 400
+        if not isinstance(data, list):
+            return jsonify({'error': '리스트 형식의 데이터가 필요합니다.'}), 400
 
-        answer = Answer(
-            question_id=data['question_id'],
-            user_id=data['user_id'],
-            content=data['content']
-        )
+        user_id = None
+        for entry in data:
+            if 'user_id' not in entry or 'choice_id' not in entry:
+                return jsonify({'error': 'user_id와 choice_id는 필수입니다.'}), 400
+            
+            user_id = entry['user_id']
+            answer = Answer(
+                user_id=entry['user_id'],
+                choice_id=entry['choice_id']
+            )
+            db.session.add(answer)
 
-        db.session.add(answer)
         db.session.commit()
 
         return jsonify({
-            'message': '답변이 성공적으로 저장되었습니다.',
-            'answer': {
-                'id': answer.id,
-                'question_id': answer.question_id,
-                'user_id': answer.user_id,
-                'content': answer.content,
-                'created_at': answer.created_at.isoformat() if answer.created_at else None
-            }
+            "message": f"User: {user_id}'s answers Success Create"
         }), 201
 
     except SQLAlchemyError as e:
