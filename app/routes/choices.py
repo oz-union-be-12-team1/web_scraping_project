@@ -32,7 +32,7 @@ def create_choice():
     })
 
 # 선택지 수정
-@choices_blp.route('/update/<int:choice_id>', methods=["GET","POST"])
+@choices_blp.route('/update/<int:choice_id>', methods=["PUT"])
 def update_choice(choice_id):
     update_choice = Choices.query.get(choice_id)
     if not update_choice:
