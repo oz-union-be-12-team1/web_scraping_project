@@ -64,7 +64,7 @@ def create_question():
         "is_active" : new_question.is_active})
 
 # 질문 수정
-@questions_blp.route('/update/<int:question_id>', methods=["PUT"])
+@questions_blp.route('/question/update/<int:question_id>', methods=["PUT"])
 def update_question(quesstion_id):
     up_question = Question.query.get(quesstion_id)
     if not up_question:
@@ -86,7 +86,7 @@ def update_question(quesstion_id):
         "is_active" : up_question.is_active})
 
 # 질문 삭제
-@questions_blp.route('/delete/<int:question_id>', methods=["DELETE"])
+@questions_blp.route('/question/delete/<int:question_id>', methods=["DELETE"])
 def delete_question(question_id):
     del_question = Question.query.get(question_id)
     
