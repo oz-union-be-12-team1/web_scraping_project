@@ -1,7 +1,7 @@
 from flask import Flask, Blueprint, jsonify, request
 from config import db
 from app.models import Choices, Question
-
+from datetime import datetime
 questions_blp = Blueprint('questions', __name__, url_prefix='/quesions')
 
 # 특정 질문 가져오기
@@ -61,3 +61,27 @@ def create_question():
         "content" : new_question.content,
         "sqe" : new_question.sqe,
         "is_active" : new_question.is_active})
+
+# 질문 수정
+@questions_blp.route('/update/<int:question_id>', methods=["PUT"])
+def update_question(quesstion_id):
+    update_question = Question.query.get(quesstion_id)
+    if not update_question:
+        return jsonify({"message" : "해당 질문이 없습니다."}), 404
+    
+    data = request.get_json()
+
+    for field in ['image_id', 'title', 'sqe']:
+         if field in data:
+             setattr(update_question, field, data[field])
+
+    update_question.update_at = datetime.now()
+    db.session.commit()
+
+    return jsonify({"id" : update_question.id,
+        "question_id" : update_question.question_id,
+        "content" : update_question.content,
+        "sqe" : update_question.sqe,
+        "is_active" : update_question.is_active})
+
+
