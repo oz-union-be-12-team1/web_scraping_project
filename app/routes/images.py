@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 images_blp = Blueprint('images', __name__)
 
+# 1. 이미지 생성
 @images_blp.route('/image', methods=['POST'])
 def create_image():
     data = request.get_json()
@@ -24,15 +25,7 @@ def create_image():
     try:
         db.session.add(image)
         db.session.commit()
-        return jsonify({
-            "message": f"ID: {image.id} Image Success Create",
-            "image": {
-                "id": image.id,
-                "url": image.url,
-                "type": image.type.value,
-                "created_at": image.created_at.isoformat()
-            }
-        }), 201
+        return jsonify({"message": f"ID: {image.id} Image Success Create"}), 201
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"error": f"DB 오류: {str(e)}"}), 500
@@ -61,6 +54,7 @@ def get_sub_images():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @images_blp.route('/image/<int:image_id>', methods=['PUT'])
 def update_image(image_id):
     image = Image.query.get(image_id)
@@ -87,8 +81,7 @@ def update_image(image_id):
             "image": {
                 "id": image.id,
                 "url": image.url,
-                "type": image.type.value,
-                "updated_at": image.updated_at.isoformat()
+                "type": image.type.value
             }
         }), 200
     except SQLAlchemyError as e:
@@ -97,6 +90,7 @@ def update_image(image_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"서버 오류: {str(e)}"}), 500
+
 
 @images_blp.route('/image/<int:image_id>', methods=['DELETE'])
 def delete_image(image_id):

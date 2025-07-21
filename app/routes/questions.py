@@ -1,106 +1,103 @@
-from flask import Flask, Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request
+from app.models import Question, Choices
 from config import db
-from app.models import Choices, Question
-from datetime import datetime
 
-questions_blp = Blueprint('questions', __name__)
+questions_blp = Blueprint('questions_blp', __name__)
 
-# 특정 질문 가져오기
-@questions_blp.route('/questions/<int:question_sqe>', methods = ['GET'])
-def get_question(question_sqe):
+@questions_blp.route('/questions/<int:question_sqe>', methods=['GET'])
+def get_question_by_sqe(question_sqe):
+    try:
+        question = Question.query.filter_by(sqe=question_sqe, is_active=True).first()
 
-    question = Question.query.filter_by(sqe = question_sqe).first()
+        if not question:
+            return jsonify({"error": "해당 질문을 찾을 수 없습니다."}), 404
 
-    if not question:
-       return jsonify({"message" : "question을 찾을수가 없습니다."}), 404
+        image_url = question.image.url if question.image else None
 
-    choices = Choices.query.filter_by(question_id=question.id).all()
+        choices = (
+            Choices.query
+            .filter_by(question_id=question.id, is_active=True)
+            .order_by(Choices.sqe)
+            .all()
+        )
 
-    return jsonify({
-        "id": question.id,
-        "title": question.title,
-        "image": question.image_id,
-        "choices": [
-            {
-                "id": choice.id,
-                "content": choice.content,
-                "is_active": choice.is_active,
-                "sqe": choice.sqe,
-                "question_id": choice.question_id
-            }
-            for choice in choices
-        ]
-    })   
+        result = {
+            "id": question.id,
+            "title": question.title,
+            "image": image_url,
+            "choices": [
+                {
+                    "id": choice.id,
+                    "content": choice.content,
+                    "is_active": choice.is_active,
+                    "sqe": choice.sqe,
+                    "question_id": choice.question_id
+                }
+                for choice in choices
+            ]
+        }
 
-# 질문 개수 확인
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @questions_blp.route('/questions/count', methods=['GET'])
-def count_question():
-    total = Question.query.count()
+def get_question_count():
+    try:
+        count = Question.query.filter_by(is_active=True).count()
+        return jsonify({"total": count}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    return jsonify({"total" : total})
 
-# 질문 생성
 @questions_blp.route('/question', methods=['POST'])
 def create_question():
-    data = request.get_json()
+    try:
+        data = request.get_json()
+        title = data.get("title")
+        sqe = data.get("sqe")
+        is_active = data.get("is_active", True)
+        image_id = data.get("image_id")
 
-    if not all(data.get(field) for field in ['image_id', 'title', 'sqe', 'is_active']):
-        return jsonify({'error' : 'image_id, title, sqe, is_active 중 값이 없는게 있습니다. 다시 확인해 주세요.'}),  400
-    
-    new_question = Question(
-        image_id = data['image_id'],
-        title = data['title'],
-        sqe = data['sqe'],
-        is_active = True
-    )
+        if not title or sqe is None or image_id is None:
+            return jsonify({"error": "title, sqe, image_id는 필수입니다."}), 400
 
-    db.session.add(new_question)
-    db.session.commit()
+        question = Question(
+            title=title,
+            sqe=sqe,
+            is_active=is_active,
+            image_id=image_id
+        )
 
-    return jsonify({"id" : new_question.id,
-        "question_id" : new_question.question_id,
-        "content" : new_question.content,
-        "sqe" : new_question.sqe,
-        "is_active" : new_question.is_active})
+        db.session.add(question)
+        db.session.commit()
 
-# 질문 수정
-@questions_blp.route('/question/update/<int:question_id>', methods=["PUT"])
-def update_question(question_id):
-    up_question = Question.query.get(question_id)
-    if not up_question:
-        return jsonify({"message" : "해당 질문이 없습니다."}), 404
-    
-    data = request.get_json()
+        return jsonify({
+            "message": f"Title: {title} question Success Create"
+        }), 201
 
-    for field in ['image_id', 'title', 'sqe']:
-         if field in data:
-             setattr(up_question, field, data[field])
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
-    up_question.updated_at = datetime.now()
-    db.session.commit()
 
-    return jsonify({
-        "id" : up_question.id,
-        "question_id" : up_question.title,
-        "content" : up_question.content,
-        "sqe" : up_question.sqe,
-        "is_active" : up_question.is_active
-        })
-
-# 질문 삭제
-@questions_blp.route('/question/delete/<int:question_id>', methods=["DELETE"])
+@questions_blp.route('/question/<int:question_id>', methods=['DELETE'])
 def delete_question(question_id):
-    del_question = Question.query.get(question_id)
-    
-    if not del_question:
-        return jsonify({"message" : "해당 질문이 없습니다."}), 404
-    
-    choice = Choices.query.filter_by(question_id=question_id).first()
-    
-    if choice:
-        return jsonify({"message" : "선택지가 있어 삭제할수 없습니다."}), 400
-    
-    db.session.delete(del_question)
-    db.session.commit()
+    try:
+        question = Question.query.get(question_id)
 
-    return jsonify({"message" : f"id : {question_id} 질문 삭제완료 했습니다."})
+        if not question:
+            return jsonify({"error": "해당 ID의 질문을 찾을 수 없습니다."}), 404
+
+        db.session.delete(question)
+        db.session.commit()
+
+        return jsonify({
+            "message": f"ID {question_id}번 질문 삭제 완료"
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"서버 오류: {str(e)}"}), 500
