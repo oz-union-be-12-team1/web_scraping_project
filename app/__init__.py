@@ -28,3 +28,4 @@ def create_app():
     register_routes(application)
         
     return application
+
