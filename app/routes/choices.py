@@ -1,6 +1,6 @@
 from flask import Flask, Blueprint, jsonify, abort, request
 from config import db
-from app.models import Choices, Question
+from app.models import Choices, Question, Answer
 from datetime import datetime
 
 choices_blp = Blueprint("choices", __name__, url_prefix='/choice')
@@ -61,6 +61,10 @@ def delete_choice(choice_id):
     delete_choice = Choices.query.get(choice_id)
     if not delete_choice:
         return jsonify({"message" : "해당 질문이 없습니다."}), 404
+    
+    answers = Answer.query.filter_by(choice_id=choice_id).first()
+    if answers:
+        return jsonify({"message" : "answer이 있어 선택지를 삭제할 수 없습니다."}), 400
     
     db.session.delete(delete_choice)
     db.session.commit()
