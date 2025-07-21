@@ -62,5 +62,7 @@ def delete_choice(choice_id):
     if not delete_choice:
         return jsonify({"message" : "해당 질문이 없습니다."}), 404
     
-    db.session
+    db.session.delete(delete_choice)
+    db.session.commit()
     
+    return jsonify({"message" : f"id : {choice_id} 질문 삭제완료 했습니다"})
