@@ -1,128 +1,72 @@
-from flask import Blueprint, request, jsonify
+from flask import Flask, Blueprint, jsonify, abort, request
 from config import db
-from app.models import Choices
-from sqlalchemy.exc import SQLAlchemyError
+from app.models import Choices, Question, Answer
+from datetime import datetime
 
-choices_blp = Blueprint('choices_blp', __name__)
+choices_blp = Blueprint("choices", __name__, url_prefix='/choice')
 
-# POST - 선택지 생성
-@choices_blp.route('/choice', methods=['POST'])
+# 선택지 생성
+@choices_blp.route('', methods=['POST'])
 def create_choice():
-    try:
-        data = request.get_json()
+    data = request.get_json()
 
-        content = data.get("content")
-        is_active = data.get("is_active", True)
-        sqe = data.get("sqe")
-        question_id = data.get("question_id")
+    if not all(data.get(field) for field in ['question_id', 'content', 'sqe']):
+        return jsonify({"error" : "question_id, content, sqe 중 값이 없는 게 있습니다. 다시 확인해 주세요." }), 400
 
-        if not content or sqe is None or question_id is None:
-            return jsonify({"error": "content, sqe, question_id는 필수 입력입니다."}), 400
+    new_choice = Choices(
+        question_id=data['question_id'],
+        content=data['content'],
+        sqe=data['data'],
+        is_active=True
+    ) 
 
-        choice = Choices(
-            content=content,
-            is_active=is_active,
-            sqe=sqe,
-            question_id=question_id
-        )
+    db.session.add(new_choice)
+    db.session.commit()
 
-        db.session.add(choice)
-        db.session.commit()
+    return jsonify({
+        "id" : new_choice.id,
+        "question_id" : new_choice.question_id,
+        "content" : new_choice.content,
+        "sqe" : new_choice.sqe,
+        "is_active" : new_choice.is_active
+    })
 
-        return jsonify({
-            "message": f"Content: 새로운 선택지 choice Success Create"
-        }), 201
-
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({"error": f"DB 오류: {str(e)}"}), 500
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"서버 오류: {str(e)}"}), 500
-
-# GET - 특정 질문에 대한 선택지 조회
-@choices_blp.route('/choice/<int:question_id>', methods=['GET'])
-def get_choices_by_question_id(question_id):
-    try:
-        choices = (
-            Choices.query
-            .filter_by(question_id=question_id, is_active=True)
-            .order_by(Choices.sqe)
-            .all()
-        )
-
-        if not choices:
-            return jsonify({"error": "해당 질문의 선택지를 찾을 수 없습니다."}), 404
-
-        return jsonify([
-            {
-                "id": choice.id,
-                "question_id": choice.question_id,
-                "content": choice.content,
-                "sqe": choice.sqe,
-                "is_active": choice.is_active
-            }
-            for choice in choices
-        ]), 200
-
-    except Exception as e:
-        return jsonify({"error": f"서버 오류: {str(e)}"}), 500
-
-
-# PUT - 선택지 수정
-@choices_blp.route('/choice/<int:choice_id>', methods=['PUT'])
+# 선택지 수정
+@choices_blp.route('/update/<int:choice_id>', methods=["PUT"])
 def update_choice(choice_id):
-    try:
-        choice = Choices.query.get(choice_id)
-        if not choice:
-            return jsonify({"error": "해당 ID의 선택지를 찾을 수 없습니다."}), 404
+    up_choice = Choices.query.get(choice_id)
+    if not up_choice:
+        return jsonify({"message" : "해당 질문이 없습니다."}), 404
+    
+    data = request.get_json()
 
-        data = request.get_json()
+    for field in ['content', 'is_active', 'sqe', 'question_id']:
+        if field in data:
+            setattr(up_choice, field, data[field])
 
-        if 'content' in data:
-            choice.content = data['content']
-        if 'sqe' in data:
-            choice.sqe = data['sqe']
-        if 'is_active' in data:
-            choice.is_active = data['is_active']
+    up_choice.update_at = datetime.now()
+    db.session.commit()
 
-        db.session.commit()
+    return jsonify({
+        "id" : up_choice.id,
+        "question_id" : up_choice.question_id,
+        "content" : up_choice.content,
+        "sqe" : up_choice.sqe,
+        "is_active" : up_choice.is_active
+    })
 
-        return jsonify({
-            "message": f"ID {choice.id}번 선택지 수정 완료",
-            "choice": {
-                "id": choice.id,
-                "question_id": choice.question_id,
-                "content": choice.content,
-                "sqe": choice.sqe,
-                "is_active": choice.is_active
-            }
-        }), 200
-
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({"error": f"DB 오류: {str(e)}"}), 500
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"서버 오류: {str(e)}"}), 500
-
-
-# DELETE - 선택지 삭제
-@choices_blp.route('/choice/<int:choice_id>', methods=['DELETE'])
+# 선택지 삭제
+@choices_blp.route('/delete/<int:choice_id>', methods=["DELETE"])
 def delete_choice(choice_id):
-    try:
-        choice = Choices.query.get(choice_id)
-        if not choice:
-            return jsonify({"error": "해당 ID의 선택지를 찾을 수 없습니다."}), 404
-
-        db.session.delete(choice)
-        db.session.commit()
-
-        return jsonify({"message": f"ID {choice.id}번 선택지 삭제 완료"}), 200
-
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({"error": f"DB 오류: {str(e)}"}), 500
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"서버 오류: {str(e)}"}), 500
+    del_choice = Choices.query.get(choice_id)
+    if not del_choice:
+        return jsonify({"message" : "해당 질문이 없습니다."}), 404
+    
+    answers = Answer.query.filter_by(choice_id=choice_id).first()
+    if answers:
+        return jsonify({"message" : "answer이 있어 선택지를 삭제할 수 없습니다."}), 400
+    
+    db.session.delete(del_choice)
+    db.session.commit()
+    
+    return jsonify({"message" : f"id : {choice_id} 질문 삭제완료 했습니다"})
