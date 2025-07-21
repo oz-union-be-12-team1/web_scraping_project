@@ -65,24 +65,24 @@ def create_question():
 # 질문 수정
 @questions_blp.route('/update/<int:question_id>', methods=["PUT"])
 def update_question(quesstion_id):
-    update_question = Question.query.get(quesstion_id)
-    if not update_question:
+    up_question = Question.query.get(quesstion_id)
+    if not up_question:
         return jsonify({"message" : "해당 질문이 없습니다."}), 404
     
     data = request.get_json()
 
     for field in ['image_id', 'title', 'sqe']:
          if field in data:
-             setattr(update_question, field, data[field])
+             setattr(up_question, field, data[field])
 
-    update_question.update_at = datetime.now()
+    up_question.update_at = datetime.now()
     db.session.commit()
 
-    return jsonify({"id" : update_question.id,
-        "question_id" : update_question.question_id,
-        "content" : update_question.content,
-        "sqe" : update_question.sqe,
-        "is_active" : update_question.is_active})
+    return jsonify({"id" : up_question.id,
+        "question_id" : up_question.question_id,
+        "content" : up_question.content,
+        "sqe" : up_question.sqe,
+        "is_active" : up_question.is_active})
 
 # 질문 삭제
 @questions_blp.route('/delete/<int:question_id>', methods=["DELETE"])
