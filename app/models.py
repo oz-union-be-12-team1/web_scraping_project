@@ -59,29 +59,22 @@ class Question(db.Model):
     __tablename__ = 'questions'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    sqe = db.Column(db.Integer, nullable=False, unique=True)
-    is_active = db.Column(db.Boolean, default=True)
+    title = db.Column(db.String(100), nullable=False)
+    sqe = db.Column(db.Integer, nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime)
+    update_at = db.Column(db.DateTime)
 
-    image_id = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=True)
-    image = db.relationship('Image', backref='questions', lazy=True)
-
-    created_at = db.Column(db.DateTime, default=now_kst)
-    updated_at = db.Column(db.DateTime, default=now_kst, onupdate=now_kst)
-
-    choices = db.relationship('Choices', backref='question', lazy=True)
+    image_id = db.Column(db.Integer, db.ForeignKey('image_id'), nullable=False)
 
 class Choices(db.Model):
     __tablename__ = 'choices'
 
     id = db.Column(db.Integer, primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
     content = db.Column(db.String(255), nullable=False)
     sqe = db.Column(db.Integer, nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime)
+    update_at = db.Column(db.DateTime)
 
-    created_at = db.Column(db.DateTime, default=now_kst)
-    updated_at = db.Column(db.DateTime, default=now_kst, onupdate=now_kst)
-
-    answers = db.relationship('Answer', backref='choice', lazy=True)
-
+    question_id = db.Column(db.Integer, db.ForeignKey('question_id'), nullable=False)
