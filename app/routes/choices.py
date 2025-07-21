@@ -34,39 +34,39 @@ def create_choice():
 # 선택지 수정
 @choices_blp.route('/update/<int:choice_id>', methods=["PUT"])
 def update_choice(choice_id):
-    update_choice = Choices.query.get(choice_id)
-    if not update_choice:
+    up_choice = Choices.query.get(choice_id)
+    if not up_choice:
         return jsonify({"message" : "해당 질문이 없습니다."}), 404
     
     data = request.get_json()
 
     for field in ['content', 'is_active', 'sqe', 'question_id']:
         if field in data:
-            setattr(update_choice, field, data[field])
+            setattr(up_choice, field, data[field])
 
-    update_choice.update_at = datetime.now()
+    up_choice.update_at = datetime.now()
     db.session.commit()
 
     return jsonify({
-        "id" : update_choice.id,
-        "question_id" : update_choice.question_id,
-        "content" : update_choice.content,
-        "sqe" : update_choice.sqe,
-        "is_active" : update_choice.is_active
+        "id" : up_choice.id,
+        "question_id" : up_choice.question_id,
+        "content" : up_choice.content,
+        "sqe" : up_choice.sqe,
+        "is_active" : up_choice.is_active
     })
 
 # 선택지 삭제
 @choices_blp.route('/delete/<int:choice_id>', methods=["DELETE"])
 def delete_choice(choice_id):
-    delete_choice = Choices.query.get(choice_id)
-    if not delete_choice:
+    del_choice = Choices.query.get(choice_id)
+    if not del_choice:
         return jsonify({"message" : "해당 질문이 없습니다."}), 404
     
     answers = Answer.query.filter_by(choice_id=choice_id).first()
     if answers:
         return jsonify({"message" : "answer이 있어 선택지를 삭제할 수 없습니다."}), 400
     
-    db.session.delete(delete_choice)
+    db.session.delete(del_choice)
     db.session.commit()
     
     return jsonify({"message" : f"id : {choice_id} 질문 삭제완료 했습니다"})
