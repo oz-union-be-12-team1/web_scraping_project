@@ -2,10 +2,11 @@ from flask import Flask, Blueprint, jsonify, request
 from config import db
 from app.models import Choices, Question
 from datetime import datetime
-questions_blp = Blueprint('questions', __name__, url_prefix='/quesions')
+
+questions_blp = Blueprint('questions', __name__)
 
 # 특정 질문 가져오기
-@questions_blp.route('/<int:question_sqe>', methods = ['GET'])
+@questions_blp.route('/questions/<int:question_sqe>', methods = ['GET'])
 def get_question(question_sqe):
 
     question = Question.query.filter_by(sqe = question_sqe).first()
@@ -32,14 +33,14 @@ def get_question(question_sqe):
     })   
 
 # 질문 개수 확인
-@questions_blp.route('/count', method=['GET'])
+@questions_blp.route('/questions/count', method=['GET'])
 def count_question():
     total = Question.query.count()
 
     return jsonify({"total" : total})
 
 # 질문 생성
-@questions_blp.route('/create', methods=['POST'])
+@questions_blp.route('/question', methods=['POST'])
 def create_question():
     data = request.get_json()
 
