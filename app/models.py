@@ -1,6 +1,7 @@
 from config import db
 
 class Question(db.Model):
+    __tablename__ = 'questions'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -12,6 +13,7 @@ class Question(db.Model):
     image_id = db.Column(db.Integer, db.ForeignKey('image_id'), nullable=False)
 
 class Choices(db.Model):
+    __tablename__ = 'choices'
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255), nullable=False)
