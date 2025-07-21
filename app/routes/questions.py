@@ -2,10 +2,10 @@ from flask import Flask, Blueprint, jsonify, request
 from config import db
 from app.models import Choices, Question
 
-questions_bp = Blueprint('questions', __name__, url_prefix='/quesions')
+questions_blp = Blueprint('questions', __name__, url_prefix='/quesions')
 
 # 특정 질문 가져오기
-@questions_bp.route('/<int:question_sqe>', methods = ['GET'])
+@questions_blp.route('/<int:question_sqe>', methods = ['GET'])
 def get_question(question_sqe):
 
     question = Question.query.filter_by(sqe = question_sqe).first()
@@ -32,8 +32,32 @@ def get_question(question_sqe):
     })   
 
 # 질문 개수 확인
-@questions_bp.route('/count', method=['GET'])
+@questions_blp.route('/count', method=['GET'])
 def count_question():
     total = Question.query.count()
 
     return jsonify({"total" : total})
+
+# 질문 생성
+@questions_blp.route('/create', methods=['POST'])
+def create_question():
+    data = request.get_json()
+
+    if not all(data.get(field) for field in ['image_id', 'title', 'sqe', 'is_active']):
+        return jsonify({'error' : 'image_id, title, sqe, is_active 중 값이 없는게 있습니다. 다시 확인해 주세요.'}),  400
+    
+    new_question = Question(
+        image_id = data['image_id'],
+        title = data['title'],
+        sqe = data['sqe'],
+        is_active = True
+    )
+
+    db.session.add(new_question)
+    db.session.commit()
+
+    return jsonify({"id" : new_question.id,
+        "question_id" : new_question.question_id,
+        "content" : new_question.content,
+        "sqe" : new_question.sqe,
+        "is_active" : new_question.is_active})
