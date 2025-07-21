@@ -33,7 +33,7 @@ def get_question(question_sqe):
     })   
 
 # 질문 개수 확인
-@questions_blp.route('/questions/count', method=['GET'])
+@questions_blp.route('/questions/count', methods=['GET'])
 def count_question():
     total = Question.query.count()
 
@@ -65,8 +65,8 @@ def create_question():
 
 # 질문 수정
 @questions_blp.route('/question/update/<int:question_id>', methods=["PUT"])
-def update_question(quesstion_id):
-    up_question = Question.query.get(quesstion_id)
+def update_question(question_id):
+    up_question = Question.query.get(question_id)
     if not up_question:
         return jsonify({"message" : "해당 질문이 없습니다."}), 404
     
@@ -76,14 +76,16 @@ def update_question(quesstion_id):
          if field in data:
              setattr(up_question, field, data[field])
 
-    up_question.update_at = datetime.now()
+    up_question.updated_at = datetime.now()
     db.session.commit()
 
-    return jsonify({"id" : up_question.id,
-        "question_id" : up_question.question_id,
+    return jsonify({
+        "id" : up_question.id,
+        "question_id" : up_question.title,
         "content" : up_question.content,
         "sqe" : up_question.sqe,
-        "is_active" : up_question.is_active})
+        "is_active" : up_question.is_active
+        })
 
 # 질문 삭제
 @questions_blp.route('/question/delete/<int:question_id>', methods=["DELETE"])
