@@ -44,7 +44,7 @@ def update_choice(choice_id):
         if field in data:
             setattr(update_choice, field, data[field])
 
-    update_choice.update_at = datetime.utcnow()
+    update_choice.update_at = datetime.now()
     db.session.commit()
 
     return jsonify({
