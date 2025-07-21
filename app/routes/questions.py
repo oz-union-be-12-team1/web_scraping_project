@@ -84,4 +84,20 @@ def update_question(quesstion_id):
         "sqe" : update_question.sqe,
         "is_active" : update_question.is_active})
 
+# 질문 삭제
+@questions_blp.route('/delete/<int:question_id>', methods=["DELETE"])
+def delete_question(question_id):
+    del_question = Question.query.get(question_id)
+    
+    if not del_question:
+        return jsonify({"message" : "해당 질문이 없습니다."}), 404
+    
+    choice = Choices.query.filter_by(question_id=question_id).first()
+    
+    if choice:
+        return jsonify({"message" : "선택지가 있어 삭제할수 없습니다."}), 400
+    
+    db.session.delete(del_question)
+    db.session.commit()
 
+    return jsonify({"message" : f"id : {question_id} 질문 삭제완료 했습니다."})
