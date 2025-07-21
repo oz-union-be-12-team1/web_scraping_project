@@ -60,7 +60,7 @@ class Question(db.Model):
     created_at = db.Column(db.DateTime)
     update_at = db.Column(db.DateTime)
 
-    image_id = db.Column(db.Integer, db.ForeignKey('images_id'), nullable=False)
+    image_id = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
 
 class Choices(db.Model):
     __tablename__ = 'choices'
@@ -72,4 +72,4 @@ class Choices(db.Model):
     created_at = db.Column(db.DateTime)
     update_at = db.Column(db.DateTime)
 
-    question_id = db.Column(db.Integer, db.ForeignKey('questions_id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
