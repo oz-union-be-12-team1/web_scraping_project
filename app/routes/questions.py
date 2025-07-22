@@ -68,7 +68,7 @@ def create_question():
             title=title,
             sqe=sqe,
             is_active=is_active,
-            image_id=image_id
+            image_id=sqe+1
         )
 
         db.session.add(question)
