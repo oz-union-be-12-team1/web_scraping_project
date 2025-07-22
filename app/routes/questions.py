@@ -4,6 +4,7 @@ from config import db
 
 questions_blp = Blueprint('questions_blp', __name__)
 
+# ✅ 특정 SQE로 질문 조회
 @questions_blp.route('/questions/<int:question_sqe>', methods=['GET'])
 def get_question_by_sqe(question_sqe):
     try:
@@ -42,7 +43,7 @@ def get_question_by_sqe(question_sqe):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+# ✅ 전체 질문 개수 조회
 @questions_blp.route('/questions/count', methods=['GET'])
 def get_question_count():
     try:
@@ -51,7 +52,7 @@ def get_question_count():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+# ✅ 질문 등록 (중복 sqe 방지)
 @questions_blp.route('/question', methods=['POST'])
 def create_question():
     try:
@@ -64,6 +65,10 @@ def create_question():
         if not title or sqe is None or image_id is None:
             return jsonify({"error": "title, sqe, image_id는 필수입니다."}), 400
 
+        # sqe 중복 방지
+        if Question.query.filter_by(sqe=sqe).first():
+            return jsonify({"error": f"이미 존재하는 sqe: {sqe} 입니다."}), 400
+
         question = Question(
             title=title,
             sqe=sqe,
@@ -75,14 +80,40 @@ def create_question():
         db.session.commit()
 
         return jsonify({
-            "message": f"Title: {title} question Success Create"
+            "message": f"질문 '{title}' 등록 완료"
         }), 201
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+# ✅ 질문 수정 (sqe 기준, 일부 필드만 수정)
+@questions_blp.route('/question/<int:sqe>', methods=['PUT'])
+def update_question_by_sqe(sqe):
+    try:
+        question = Question.query.filter_by(sqe=sqe).first()
 
+        if not question:
+            return jsonify({"error": f"sqe={sqe}에 해당하는 질문 없음"}), 404
+
+        data = request.get_json()
+
+        if "title" in data:
+            question.title = data["title"]
+        if "image_id" in data:
+            question.image_id = data["image_id"]
+        if "is_active" in data:
+            question.is_active = data["is_active"]
+
+        db.session.commit()
+
+        return jsonify({"message": f"질문 sqe={sqe} 수정 완료"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# ✅ 질문 삭제 (question_id 기준)
 @questions_blp.route('/question/<int:question_id>', methods=['DELETE'])
 def delete_question(question_id):
     try:
